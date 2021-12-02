@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Display IP Address</title>
+</head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Add a gray background color with some padding */
+  body {
+    font-family: Arial;
+    padding: 20px;
+    background: #f1f1f1;
+  }
+
+  /* Header/Blog Title */
+  .header {
+    padding: 30px;
+    font-size: 40px;
+    text-align: center;
+    background: white;
+  }
+
+  /* Create two unequal columns that floats next to each other */
+  /* Left column */
+  .leftcolumn {   
+    float: left;
+    width: 75%;
+  }
+
+  /* Right column */
+  .rightcolumn {
+    float: left;
+    width: 25%;
+    padding-left: 20px;
+  }
+
+  /* Fake image */
+  .fakeimg {
+    background-color: #aaa;
+    width: 100%;
+    padding: 20px;
+  }
+
+  /* Add a card effect for articles */
+  .card {
+     background-color: white;
+     padding: 20px;
+     margin-top: 20px;
+  }
+
+  /* Clear floats after the columns */
+  .row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 20px;
+    text-align: center;
+    background: #ddd;
+    margin-top: 20px;
+  }
+
+  /* Responsive layout - when the screen is less than 800px wide, make the two columns stack on top of each other instead of next to each other */
+  @media screen and (max-width: 800px) {
+    .leftcolumn, .rightcolumn {   
+      width: 100%;
+      padding: 0;
+    }
+  }
+  </style>
+</head>
+
+<div class="header">
+  <h2>Movie Review Site by jrow</h2>
+</div>
+
+<div class="row">
+  <div class="leftcolumn">
+    <div class="card">
+      <h2>TITLE HEADING</h2>
+      <h5>Title description, Dec 7, 2017</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <p>Some text..</p>
+      <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
+    </div>
+    <div class="card">
+      <h2>TITLE HEADING</h2>
+      <h5>Title description, Sep 2, 2017</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <p>Some text..</p>
+      <p>Sunt in culpa qui officia deserunt mollit anim id est laborum consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco.</p>
+    </div>
+  </div>
+  <div class="rightcolumn">
+    <div class="card">
+      <h2>Load database</h2>
+      <input type="button" value="Load Movies" onclick="sendReq()"/>
+      <p>Database is initially empty. You must load values into database by pressing above button!</p>
+    </div>
+    <div class="card">
+      <h3>Popular Post</h3>
+      <div class="fakeimg">Image</div><br>
+      <div class="fakeimg">Image</div><br>
+      <div class="fakeimg">Image</div>
+    </div>
+    <div class="card">
+      <h3>Follow Me</h3>
+      <p>Some text..</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <h2>Footer</h2>
+</div>
+
+<input type="text" value="Location" id="loc"/>
+<input type="button" value="Load Weather" onclick="sendReq()"/>
+
+<body>
+    <p id="country"></p>
+    <body>
+    <script>
+        function sendReq(){
+          console.log(loc.value)
+          // API for get requests
+          let fetchForecast = fetch( "http://127.0.0.1:4000/getAPIResponse/"+loc.value);
+          var lat = '';
+          var lon = '';
+          fetchForecast.then(res =>res.json())
+            .then(d => { 
+              var temp = "";
+              var airMessage = ""; 
+              var rainMessage ="";
+              var sunMessage = "";
+              var rainSet =false;
+              var sunSet = false;
+
+              var loopCounter = 0;
+              lat = d['city']['coord']['lat']
+              lon = d['city']['coord']['lon']
+              console.log(d)
+              d['list'].forEach((itemData) => {
+                if(!rainSet){
+                  if(itemData.weather[0].description.includes("rain")) {
+                    rainMessage= "rain expected, pack a jacket" 
+                    rainSet=true
+                    console.log('rain found : ', itemData.weather[0].description)
+                  }
+                  else{ 
+                    rainMessage = "rain not expected, dont pack a jacket" 
+                    console.log('rain not found : ', itemData.weather[0].description)
+                  }
+                }
+                if(!sunSet){
+                  if(itemData.weather[0].description.includes("clear sky")) {
+                    sunMessage = "sun expected, pack sunglasses"
+                    sunSet = true
+                    console.log('sky found : ', itemData.weather[0].description)
+                  }
+                  else{ 
+                    sunMessage = "sun not expected, dont pack "
+                    console.log('sky not found : ', itemData.weather[0].description)
+                  }
+                }
+                if((loopCounter % 4) == 0){
+                  temp += "<tr>";
+                  temp += "<td>" + itemData.dt_txt + "</td>";
+                  temp += "<td>" + itemData.main.feels_like + "</td>";
+                  temp += "<td>" + itemData.main.temp + "</td>";
+                  temp += "<td>" + itemData.weather[0].description + "</td>";
+                  temp += "<td>" + itemData.wind.speed + "</td>";
+                  temp += "<td>" + itemData.main.pressure + "</td></tr>";
+
+                }
+                loopCounter++;
+              })
+              document.getElementById('data').innerHTML = temp;
+              document.getElementById('sun').innerHTML = rainMessage;
+              document.getElementById('rain').innerHTML = sunMessage;})
+            .then(d => fetch("http://127.0.0.1:4000/getAirPollution/lat/"+lat+'/lon/'+lon))
+            .then(resp => resp.json())
+            .then(data => {
+              o3 = data['list']['0']['components']['o3']
+              pm25 = data['list']['0']['components']['pm2_5']
+              pm10 = data['list']['0']['components']['pm10']
+              no2 = data['list']['0']['components']['no2']
+              if(o3 > 180 || pm25  > 30 || pm10 > 90 || no2 > 200){
+                console.log('bad air quality')
+                airMessage="<p>bad air quality, bring a mask</p>"; 
+              }
+              else{
+                  airMessage="<p>good air quality, dont bring mask</p>";
+              }
+              document.getElementById('pollution').innerHTML = airMessage;
+              console.log(o3,pm25,pm10,no2)
+            })
+        }
+    </script></body>
+<table class="table" frame="box" rules="all">
+    <thead>
+      <tr>
+        <th>Date time</th><br/>
+        <th>Feels Like Temp</th><br/>
+        <th>Temp</th><br/>
+        <th>Description</th><br/>
+        <th>Wind Speed</th><br/>
+        <th>Pressure</th><br/>
+
+      </tr>
+    </thead>
+    <tbody id="data">
+
+    </tbody>
+  </table>
+  <p id='pollution'></p>
+  <div>
+    <p id = 'sun'></p>
+    <p id = 'rain'></p>
+  </div>
+  <div>
+  </div>
+</html>
