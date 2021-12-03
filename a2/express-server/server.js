@@ -1,5 +1,15 @@
 const AWS = require('aws-sdk');
 const axios = require('axios');
+const http = require('http');
+const express = require('express');
+var fs = require("fs");
+var cors = require('cors');
+const host = 'localhost';
+const port = 4000;
+const accessKey = "";
+const secAccessKey = "";
+const app = express();
+app.use(cors({ origin: true, credentials: true }));
 
 var create_params = {
     TableName : "Movies",
@@ -23,16 +33,15 @@ var delete_params = {
 };
 
 // AWS UPLOADING CREDENTIALS
-// Set the region & credentials
 AWS.config.update({
     region: 'eu-west-1',
     credentials: {
-        accessKeyId: "xxx",
-        secretAccessKey: "xxx"
+        accessKeyId: accessKey,
+        secretAccessKey: secAccessKey
   }
 });
 
-const download_opts = {
+const download_params = {
   Bucket: "csu44000assignment220", 
   Key: "moviedata.json"
 };
@@ -73,8 +82,8 @@ function putDDB(movie){
     var put_params = {
         region: 'eu-west-1',
         credentials: {
-            accessKeyId: "AKIAV43OARRYQPZQB2WF",
-            secretAccessKey: "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"
+            accessKeyId: accessKey,
+            secretAccessKey: secAccessKey
         },
         TableName:'Movies',
         Item:{
@@ -108,19 +117,60 @@ async function getS3(opts) {
     return resp;
 }
 
-(async () => {
-  try {
-    //deleteDDBTable();
-    //createDDBTable();
-    var resp = await getS3(download_opts);
-    console.log(resp);
-    //putJsonDDB(movies);
-  } catch (error) {
-    console.log(error);
-  }
-})();
+app.get('/CreateDatabase', (req, res, next) => {
+    // create DynamoDB promise
+    (async () => {
+        try {
+            createDDBTable();
+            var resp = await getS3(download_params);
+            putJsonDDB(resp);
+        } catch (error) {
+            console.log(error);
+        }
+    })();
+})
 
-/* TODO :
- 1)TURN INTO SERVER 
+app.get('/DestroyDatabase', (req, res, next) => {
+    console.log('destroying');
+    (async () => {
+        try {
+            deleteDDBTable();
+        } catch (error) {
+            console.log(error);
+        }
+    })();
+})
 
- */ 
+app.get('/QueryDatabase/:movie/:year/:review', (req, res, next) => {
+    var movie = req.params.movie;
+    var year = req.params.year;
+    var review = req.params.review;
+    var put_params = {
+        region: 'eu-west-1',
+        credentials: {
+            accessKeyId: accessKey,
+            secretAccessKey: secAccessKey
+        },
+        TableName:'Movies',
+        KeyConditionExpression: "#yr = :yyyy",
+        ExpressionAttributeNames:{
+            "#yr": "year"
+        },
+        ExpressionAttributeValues: {
+            ":yyyy": 1985
+        }
+    };
+    DynamoDB.query(put_params, function(err, data) {
+        if(data){
+            console.log("Data : ",data)
+        }
+        if (err) {
+            console.log("Error : ", err);
+        } 
+    });
+})
+
+
+app.listen(port, () => {
+  console.log(`Success! Your application is running on port ${port}.`);
+});
