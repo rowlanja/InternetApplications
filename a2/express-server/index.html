@@ -83,7 +83,9 @@
 </div>
 
 <div class="row">
-  <div class="leftcolumn">
+  <div class="leftcolumn" id="display">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+    <h2>Querying {{title}} from {{year}} with rating atleast{{rating}} </h2>
     <div class="card">
       <h2>TITLE HEADING</h2>
       <h5>Title description, Dec 7, 2017</h5>
@@ -129,8 +131,22 @@
 
 <input type="text" value="Location" id="loc"/>
 <input type="button" value="Load Weather" onclick="sendReq()"/>
-<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 <script>
+  var app = new Vue({
+      el: '#app',
+      data: {
+        year : '', 
+        title : '',
+        rating : ''
+      },
+      methods: {
+        CreateTable : createTable,
+        QueryDatabase : queryTable,
+        DestroyTable : destroyTable
+      }
+    })
+    
+
   function sendCreate(){
     console.log(loc.value)
     // API for get requests
@@ -152,11 +168,25 @@
 
 
     // API for get requests
-    console.log("http://127.0.0.1:4000/QueryDatabase/"+m+y+r);
-    let fetchForecast = fetch( "http://127.0.0.1:4000/QueryDatabase/"+m+y+r);
-
-    var lat = '';
-    var lon = '';
+    fetch( "http://127.0.0.1:4000/QueryDatabase/"+m+y+r)
+    .then((data) => {
+      return response.json();
+    })
+    .then((data) => { 
+        formDisplay(data);
+    })
+  }
+  
+  function formDisplay(data) {
+    var table = document.getElementById('movie');
+    var th = "<tr>";
+    th += "<th>" + 'Year' + "</th>" + "<th>" + 'Title' + "</th>";
+    table.innerHTML += th;
+    for (var i in data) {
+      var tr = "<tr>";
+      tr += "<td>" + data[i]["year"] + "</td>" + "<td>" + data[i]["title"] + "</td>";
+      table.innerHTML += tr;
+    }
   }
 
 </script>
