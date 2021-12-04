@@ -85,7 +85,6 @@
 <div class="row">
   <div class="leftcolumn" id="display">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
-    <h2>Querying {{title}} from {{year}} with rating atleast{{rating}} </h2>
     <div class="card">
       <h2>TITLE HEADING</h2>
       <h5>Title description, Dec 7, 2017</h5>
@@ -102,116 +101,79 @@
     </div>
   </div>
   <div class="rightcolumn">
-    <div class="card">
-      <h2>Load database</h2>
-      <input type="button" value="Create Database" onclick="sendCreate()"/>
-      <p>Database is initially empty. You must load values into database by pressing above button!</p>
+    <div id="app">
+      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
+      <div class="card">
+        <h2>Create Database</h2>
+        <button id="create" v-on:click="sendCreate"> Create Database</button><br>
+        <br/>
+      </div>
+      <div class="card">
+        <h2>Load Movies</h2>
+        <p>Database is initially empty. You must load values into database by pressing above button!</p>
+        <input id="input" v-model="title" placeholder="Query Movie Title"><br/>
+        <input id="input" v-model="year" placeholder="Query Movie Year"></br>
+        <input id="input" v-model="rating" placeholder="Query Movie Rating"></br>
+        <br/>
+        <button id="query" v-on:click="sendQuery">Query Database</button><br></br>
+      </div>
+      <div class="card">
+        <h2>Delete Database</h2>
+        <button id="destroy" v-on:click="sendDestroy">Destroy Database</button>
+        <p>Database is initially empty. You must load values into database by pressing above button!</p>
+      </div>
+      <h2>Querying {{title}} from {{year}} starting with  {{title}}. Results: </h2>
+      <table id="movie" style="width: 50%" ></table>
     </div>
-    <div class="card">
-      <h2>Load Movies</h2>
-      <input type="button" value="Load Movies" onclick="sendQuery()"/>
-      <input type="text" value="Movie" id="mov"/>
-      <input type="text" value="Year" id="year"/>
-      <input type="text" value="Rating" id="rat"/>
-
-      <p>Database is initially empty. You must load values into database by pressing above button!</p>
-    </div>
-    <div class="card">
-      <h2>Delete Database</h2>
-      <input type="button" value="Delete Database" onclick="sendDestroy()"/>
-      <p>Database is initially empty. You must load values into database by pressing above button!</p>
-    </div>
-
   </div>
 </div>
-
-<div class="footer">
-  <h2>Footer</h2>
-</div>
-
-<input type="text" value="Location" id="loc"/>
-<input type="button" value="Load Weather" onclick="sendReq()"/>
 <script>
   var app = new Vue({
       el: '#app',
       data: {
         year : '', 
         title : '',
-        rating : ''
+        rating : '',
       },
       methods: {
-        CreateTable : createTable,
-        QueryDatabase : queryTable,
-        DestroyTable : destroyTable
+        sendCreate : sendCreate,
+        sendQuery : sendQuery,
+        sendDestroy : sendDestroy
       }
-    })
+  })
     
 
   function sendCreate(){
-    console.log(loc.value)
-    // API for get requests
     let fetchForecast = fetch( "http://127.0.0.1:4000/CreateDatabase");
-    var lat = '';
-    var lon = '';
   }
+
   function sendDestroy(){
-    console.log(loc.value)
-    // API for get requests
     let fetchForecast = fetch( "http://127.0.0.1:4000/DestroyDatabase");
-    var lat = '';
-    var lon = '';
   }
+
   function sendQuery(){
-    const m = mov.value + '/';
-    const y = year.value + '/';
-    const r = rat.value + '/';
-
-
-    // API for get requests
+    const m = this.title + '/';
+    const y = this.year + '/';
+    const r = this.rating + '/';
     fetch( "http://127.0.0.1:4000/QueryDatabase/"+m+y+r)
     .then((data) => {
-      return response.json();
+      return data.json();
     })
     .then((data) => { 
         formDisplay(data);
     })
   }
-  
+
   function formDisplay(data) {
     var table = document.getElementById('movie');
-    var th = "<tr>";
-    th += "<th>" + 'Year' + "</th>" + "<th>" + 'Title' + "</th>";
-    table.innerHTML += th;
+    console.log('transforming data : ', data)
     for (var i in data) {
-      var tr = "<tr>";
-      tr += "<td>" + data[i]["year"] + "</td>" + "<td>" + data[i]["title"] + "</td>";
-      table.innerHTML += tr;
+      console.log('I : ', i);
+      var div = "<div>";
+      div += "<h2>" + data[i]["year"] + "</h2>" + "<h5>" + data[i]["title"] + "</h5>" + "<p>"+ data[i]["rating"]+"</p>"+"</div>";
+      table.innerHTML += div;
     }
   }
 
 </script>
-
-<table class="table" frame="box" rules="all">
-    <thead>
-      <tr>
-        <th>Date time</th><br/>
-        <th>Feels Like Temp</th><br/>
-        <th>Temp</th><br/>
-        <th>Description</th><br/>
-        <th>Wind Speed</th><br/>
-        <th>Pressure</th><br/>
-
-      </tr>
-    </thead>
-    <tbody id="data">
-
-    </tbody>
-  </table>
-  <p id='pollution'></p>
-  <div>
-    <p id = 'sun'></p>
-    <p id = 'rain'></p>
-  </div>
-  <div>
-  </div>
 </html>
